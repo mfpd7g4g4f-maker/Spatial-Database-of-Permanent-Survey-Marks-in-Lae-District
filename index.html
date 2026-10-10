@@ -38,6 +38,17 @@ html,body,#map{width:100%;height:100%;padding:0;margin:0;overflow:hidden}
 .how-to-use-panel ol{margin:0;padding-left:20px}
 .how-to-use-panel li{margin-bottom:7px;font-size:12px;line-height:1.45}
 .how-to-use-panel strong{color:#222}
+.share-map-control{position:relative}
+.share-map-button{width:38px;height:38px;background:white;border:2px solid rgba(0,0,0,0.2);border-radius:4px;cursor:pointer;color:#333;display:flex;align-items:center;justify-content:center}
+.share-map-button:hover{background:#f4f4f4}
+.share-map-button svg{width:22px;height:22px}
+.share-map-panel{position:absolute;right:46px;top:0;width:250px;max-width:calc(100vw - 80px);box-sizing:border-box;background:white;border:1px solid #ccc;border-radius:5px;box-shadow:0 3px 10px rgba(0,0,0,0.25);padding:12px;font-family:Arial,sans-serif;color:#333;display:none;z-index:10000;text-align:center}
+.share-map-panel h3{margin:0 24px 8px 0;font-size:15px;text-align:left}
+.share-map-close{position:absolute;top:7px;right:8px;border:0;background:transparent;color:#555;font-size:20px;line-height:1;cursor:pointer}
+.share-map-qr{display:block;width:190px;height:190px;max-width:100%;margin:0 auto 8px}
+.share-map-panel p{margin:0 0 8px;font-size:12px;line-height:1.4}
+.share-map-link,.share-map-download{font-size:12px}
+.share-map-download{display:inline-block;margin-left:10px;color:#216e39}
 #map .leaflet-popup-content{box-sizing:border-box;height:auto!important;max-height:min(65vh,520px)!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-right:14px;scrollbar-gutter:stable}
 .psm-popup{font-family:Arial,sans-serif;width:100%;max-width:390px}
 .psm-popup-title{font-size:18px;font-weight:bold;color:#222;margin-bottom:3px}
@@ -762,6 +773,38 @@ return container;
 }
 });
 map.addControl(new HowToUseControl());
+
+var ShareMapControl=L.Control.extend({
+options:{position:'topright'},
+onAdd:function(map){
+var container=L.DomUtil.create('div','share-map-control');
+var button=L.DomUtil.create('button','share-map-button',container);
+button.type='button';
+button.setAttribute('aria-label','Show QR code to share this map');
+button.setAttribute('aria-expanded','false');
+button.title='Share this map: open or scan its QR code.';
+button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h3v3h-3zm4 0h4v2h-4zm-4 5h2v3h-2zm4-1h4v4h-2v-2h-2z"/></svg>';
+var panel=L.DomUtil.create('div','share-map-panel',container);
+panel.setAttribute('role','dialog');
+panel.setAttribute('aria-label','Share the Lae District survey marks map');
+panel.innerHTML='<button type="button" class="share-map-close" aria-label="Close QR code">&times;</button><h3>Share this Geoportal</h3><img class="share-map-qr" src="images/geoportal-qr.svg" alt="QR code linking to the Lae District Permanent Survey Marks Geoportal"><p>Scan to open the public map, or use the link below.</p><a class="share-map-link" href="https://mfpd7g4g4f-maker.github.io/Spatial-Database-of-Permanent-Survey-Marks-in-Lae-District/#12/-6.6938/146.9829" target="_blank" rel="noopener">Open public map</a><a class="share-map-download" href="images/geoportal-qr.svg" download="lae-survey-marks-qr.svg">Download QR</a>';
+var closeButton=panel.querySelector('.share-map-close');
+function setPanelVisible(visible){
+panel.style.display=visible?'block':'none';
+button.setAttribute('aria-expanded',String(visible));
+if(visible){closeButton.focus()}else{button.focus()}
+}
+button.addEventListener('click',function(){setPanelVisible(panel.style.display!=='block')});
+closeButton.addEventListener('click',function(){setPanelVisible(false)});
+panel.addEventListener('keydown',function(event){
+if(event.key==='Escape'){setPanelVisible(false)}
+});
+L.DomEvent.disableClickPropagation(container);
+L.DomEvent.disableScrollPropagation(container);
+return container;
+}
+});
+map.addControl(new ShareMapControl());
 
 var mapAuthorCredit=L.control({position:'bottomleft'});
 mapAuthorCredit.onAdd=function(){
